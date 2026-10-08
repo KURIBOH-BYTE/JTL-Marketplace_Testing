@@ -103,6 +103,24 @@ jobs:
             exit 1
           }
 
+      - name: hello_jtl.py meldet fehlende Zugriffswege verstaendlich
+        run: |
+          # Auf dem Runner gibt es weder pyodbc noch sqlcmd. Erwartet wird eine
+          # Meldung, die beide Ursachen nennt - kein Stacktrace.
+          set +e
+          output=$(python tools/hello_jtl.py 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          if [ "$code" -eq 0 ]; then
+            echo "FEHLER: haette ohne Datenbank fehlschlagen muessen"
+            exit 1
+          fi
+          echo "$output" | grep -q "Kein Zugriffsweg hat funktioniert" || {
+            echo "FEHLER: Meldung nennt die Ursache nicht"; exit 1; }
+          echo "$output" | grep -q "pyodbc" || { echo "FEHLER: pyodbc nicht erwaehnt"; exit 1; }
+          echo "$output" | grep -q "sqlcmd" || { echo "FEHLER: sqlcmd nicht erwaehnt"; exit 1; }
+
       - name: Keine Zugangsdaten im Repository
         run: |
           test ! -f config.ini || { echo "config.ini darf nicht eingecheckt sein"; exit 1; }

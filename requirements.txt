@@ -1,0 +1,7 @@
+# Nur fuer den vollen Werkzeugkasten. Der erste Test (tools/hello_jtl.py)
+# laeuft ohne alles: er faellt auf sqlcmd.exe zurueck, das mit jeder
+# SQL-Server-Installation mitkommt.
+
+# Datenbankzugriff. Braucht zusaetzlich den "ODBC Driver 17 for SQL Server"
+# von Microsoft - bei einer JTL-Installation meist schon vorhanden.
+pyodbc>=5.0

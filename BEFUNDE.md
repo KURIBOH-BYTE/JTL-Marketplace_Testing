@@ -47,7 +47,8 @@ Durch die Doku bereits geklärt, hier nur zur Gegenprüfung am System:
 | Frage | Antwort |
 | --- | --- |
 | Verbindung steht? | |
-| ODBC-Treiber | |
+| Zugriffsweg (pyodbc oder sqlcmd) | |
+| Genügt die Windows-Anmeldung? | |
 | Datenbankname | |
 | `tXMLBestellImport` vorhanden? | |
 | Artikelnummer-Spalte in `tArtikel` | |

@@ -50,6 +50,8 @@ schreibt in die Datenbank – ohne `--confirm` passiert nichts.
 JTL-Marketplace_Testing/
 ├── README.md              dieser Versuchsplan
 ├── BEFUNDE.md             Protokoll der Ergebnisse  ← das eigentliche Ergebnis
+├── setup.ps1              venv anlegen (nur für den vollen Werkzeugkasten)
+├── requirements.txt       pyodbc
 ├── config.example.ini     Zugangsdaten und Ameise-Vorlagen-IDs
 ├── samples/
 │   ├── jtl-vorlagen/      was JTL/FOC uns liefert (OldWawi.xsd, Beispieldateien)
@@ -67,7 +69,22 @@ JTL-Marketplace_Testing/
 
 ## Einrichten
 
-Die Werkzeuge nutzen das venv der Middleware. Windows-Schreibweise der Befehle:
+**Für Versuch 0 ist nichts einzurichten** – `tools\hello_jtl.py` läuft mit
+System-Python ohne Zusatzpakete.
+
+Für den vollen Werkzeugkasten auf Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File setup.ps1
+```
+
+Das legt ein venv an, installiert `pyodbc`, zieht die Abhängigkeiten der
+Middleware dazu (falls daneben vorhanden) und erzeugt die `config.ini`.
+Ein venv lässt sich nicht vorbauen und mitliefern: es enthält absolute Pfade
+und plattformspezifische Binärdateien.
+
+Von Hand, oder auf macOS/Linux — die Werkzeuge nutzen das venv der Middleware.
+Windows-Schreibweise der Befehle:
 [DEV-SERVER.md](https://github.com/KURIBOH-BYTE/JTL-Marketplace-Integration/blob/main/DEV-SERVER.md).
 
 ```bash
@@ -114,35 +131,77 @@ muss – Modell und Ablauf der Middleware bleiben gleich.
 
 ## Versuch 0: Kommt Python überhaupt an JTL?
 
-Der kleinste sinnvolle Test. Liest nur, schreibt nichts.
+Der kleinste sinnvolle Test. **Braucht keine Installation und kein venv:**
 
-```bash
-pip install pyodbc
-$PY tools/hello_jtl.py --server "(local)\JTLWAWI" --user sa --password GEHEIM
+```powershell
+py tools\hello_jtl.py
 ```
 
-Oder die Zugangsdaten in `config.ini` eintragen, dann genügt
-`$PY tools/hello_jtl.py`.
+Zwei Gründe, warum das ohne Vorbereitung geht:
 
-Das Skript zeigt der Reihe nach: Verbindung, SQL-Server-Version, Anzahl
-Tabellen, ob die sechs für die Anbindung relevanten Tabellen existieren, die
-Spalten von `tArtikel` und drei echte Artikel.
+* **Anmeldung** über die Windows-Anmeldung des angemeldeten Benutzers.
+  Bei JTL ist Windows-Authentifizierung der Standard, und der Account, der
+  den SQL Server installiert hat, hat üblicherweise Zugriff. Kein Passwort
+  in einer Datei.
+* **Zugriffsweg** über `pyodbc`, falls vorhanden – sonst über `sqlcmd.exe`,
+  das mit jeder SQL-Server-Installation mitkommt. Das Skript wählt selbst.
+
+Falls der Windows-Benutzer keine Rechte hat:
+
+```powershell
+py tools\hello_jtl.py --user sa --password GEHEIM
+```
+
+Anderer Instanzname: `--server "SERVERNAME\JTLWAWI"`.
+
+Das Skript zeigt Verbindung, SQL-Server-Version, Anzahl Tabellen, ob die sechs
+relevanten Tabellen existieren, die Spalten von `tArtikel`, drei echte Artikel
+und die vorhandenen Versand- und Zahlungsarten.
 
 **Erfolg heisst:** am Ende steht „Der Weg Python -> JTL ist offen."
 
+Jeder Abschnitt läuft einzeln; scheitert einer, meldet das Skript ihn und macht
+weiter – so sieht man in einem Durchlauf, was geht und was nicht.
+
 **Zu beantworten:**
 
-- [ ] Steht die Verbindung? Welcher ODBC-Treiber?
+- [ ] Steht die Verbindung? Über welchen Weg (pyodbc oder sqlcmd)?
+- [ ] Genügt die Windows-Anmeldung, oder braucht es `sa`?
 - [ ] Heisst die Datenbank wirklich `eazybusiness`?
 - [ ] Existiert `tXMLBestellImport`? (Das ist der automatische Importweg.)
 - [ ] Wie heisst die Artikelnummer-Spalte in `tArtikel` – `cArtNr`?
-- [ ] Welche Versand- und Zahlungsarten gibt es? Die Namen braucht der Import:
-      ```sql
-      SELECT cName FROM tVersandArt;
-      SELECT cName FROM tZahlungsart;
-      ```
+- [ ] **Welche Versand- und Zahlungsarten gibt es?** Das Skript listet sie.
+      Diese Namen muss das Import-XML exakt treffen, sonst lehnt JTL ab.
 
 Erst wenn das läuft, lohnen die weiteren Versuche.
+
+### Warum direkt in die Datenbank und nicht über Ameise?
+
+Beides hat seinen Platz, aber nicht denselben:
+
+| | Direkt per SQL | JTL-Ameise |
+| --- | --- | --- |
+| Zugangsdaten | Windows-Anmeldung, kein Passwort nötig | `-u` und `-p` auf der Kommandozeile – **vermeidet das Passwort also nicht** |
+| Vorbereitung | keine | Vorlage muss vorher in der grafischen Oberfläche angelegt werden |
+| Abfragen | beliebig | nur was die Vorlage hergibt |
+| Ergebnis | direkt im Programm | CSV-Datei |
+| Offiziell unterstützt | nein (Lesen ist unkritisch, kann aber bei JTL-Updates brechen) | ja |
+
+Daraus die Aufteilung:
+
+* **Lesen** (erkunden, später Versanddaten holen) → direkt per SQL. Kein
+  Vorlagenbau, keine Zwischendateien, und auf einem Server ohne grafische
+  Oberfläche ist das der einzige praktikable Weg.
+* **Aufträge schreiben** → `tXMLBestellImport`. Das ist der von JTL
+  **dokumentierte** automatische Importweg und selbst ein Datenbankzugriff.
+  Die ursprüngliche Vorgabe „kein direkter Datenbankzugriff" bezog sich auf
+  eigene Schreibzugriffe in Geschäftstabellen, nicht auf diesen Posteingang.
+* **Ameise** → wenn die IT ein offiziell unterstütztes Werkzeug verlangt, oder
+  für grössere Produktdaten-Exporte, wo eine feste Vorlage ohnehin sinnvoll
+  ist. `tools/jtl_export.py` deckt das ab.
+
+Sollte der direkte Lesezugriff nicht erwünscht sein, sag Bescheid – dann baue
+ich Versuch 7 auf Ameise um. Das kostet eine Exportvorlage pro Abfrage.
 
 ## Versuch 1: OldWawi.xsd besorgen
 
