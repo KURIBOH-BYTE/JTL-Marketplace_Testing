@@ -143,12 +143,26 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--encoding", default=None,
                         help="Encoding; Standard ISO-8859-1 für XML, "
                              "utf-8-sig für CSV")
+    # Diese drei muessen BESTEHENDEN Eintraegen in JTL entsprechen, sonst
+    # lehnt der Import ab. Die Standardwerte sind Platzhalter.
+    parser.add_argument("--customer-number", default=None,
+                        help="Kundennummer des Marktplatzes in JTL")
+    parser.add_argument("--shipping-method", default="Standard",
+                        help="Versandart; muss in JTL existieren")
+    parser.add_argument("--payment-method", default="Rechnung",
+                        help="Zahlungsart; muss in JTL existieren")
+    parser.add_argument("--company-id", default="1",
+                        help="kFirma; leer lassen, wenn nur eine Firma")
     args = parser.parse_args(argv)
 
     middleware = find_middleware(args.middleware)
     api = load_middleware(middleware)
     config_dir = middleware / "config"
     print(f"Middleware: {middleware}")
+    if not args.customer_number:
+        print("Hinweis: --customer-number nicht gesetzt, Platzhalter wird "
+              "verwendet. Kundennummer, Versand- und Zahlungsart muessen "
+              "bestehenden Eintraegen in JTL entsprechen.")
 
     connector = build_connector(api, config_dir, args.platform)
     jtl = api["JtlConnector"](
@@ -156,10 +170,13 @@ def main(argv: list[str] | None = None) -> int:
         mode="dry_run",
         dry_run_dir=args.out,
         article_name_max_length=args.article_name_max,
-        customer_numbers={"galaxus": "K-GALAXUS", "zur_rose": "K-ZURROSE"},
-        shipping_method="Standard",
-        payment_method="Rechnung",
-        company_id="1",
+        customer_numbers={
+            args.platform: args.customer_number
+            or {"galaxus": "K-GALAXUS", "zur_rose": "K-ZURROSE"}[args.platform]
+        },
+        shipping_method=args.shipping_method,
+        payment_method=args.payment_method,
+        company_id=args.company_id or None,
         import_format=args.format,
         encoding=args.encoding or "ISO-8859-1",
         vat_percent_fallback=args.vat_percent,

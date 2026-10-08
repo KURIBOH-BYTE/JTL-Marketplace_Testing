@@ -130,57 +130,63 @@ in `connectors/jtl_csv.py` und in `config.yaml` unter `jtl.csv`.
 
 ---
 
-## Versuch 1: Importvorlage anlegen
+## Versuch 1: Erster Import über den Dialog
 
-Ohne Vorlage geht nichts. Zuerst die nötige Zuordnung ausgeben lassen:
+Der einfachste Einstieg: **kein Datenbankzugriff, keine Vorlage, kein Ameise.**
+
+Zuerst in JTL-Wawi nachsehen und notieren:
+
+- Kundennummer von Galaxus (bzw. Zur Rose)
+- eine vorhandene **Versandart** (exakter Name)
+- eine vorhandene **Zahlungsart** (exakter Name)
+
+Diese drei müssen bestehenden Einträgen entsprechen, sonst lehnt JTL ab.
+
+Dann die Datei erzeugen:
 
 ```powershell
-& $PY tools\jtl_import.py --mapping
+run.cmd build_import --platform galaxus ^
+  ..\JTL-Marketplace-Integration\jtl-integration\tests\fixtures\GORDP_123456_9316271.xml ^
+  --customer-number 10042 --shipping-method "Economy" --payment-method "Rechnung"
 ```
 
-Das listet jede Spalte unserer CSV, wohin sie im Ameise-Dialog gehört, und die
-Einstellungen für Schritt 2 und 4.
+Ergebnis: `samples\import\galaxus_9316271.xml`.
 
-Dann eine Beispieldatei erzeugen, damit die Vorlage gegen echte Spalten
-angelegt werden kann:
+**Datenbanksicherung machen** – das verlangt die JTL-Doku vor jedem XML-Import
+ausdrücklich.
 
-```powershell
-& $PY tools\build_import.py --platform galaxus $MW\tests\fixtures\GORDP_123456_9316271.xml
-```
+Dann in JTL-Wawi: *Verkauf > Importieren: Aufträge (\*.xml)*, Datei wählen.
+Einstellungen:
 
-In JTL-Ameise: *Import > Aufträge > Aufträge*, Datei wählen, zuordnen,
-**Vorlage speichern**. Die ID beginnt mit `IMP` und gehört in die `config.ini`
-unter `[ameise] import_orders`.
+| Option | Stellung |
+| --- | --- |
+| Bestehende Kundendaten aktualisieren | **aus** – sonst überschreiben Bestelldaten den Kundenstamm |
+| Identische externe Identifikationsnummern nicht importieren | **ein** – das ist der Doppelimport-Schutz |
+| Lagerbestände nicht anpassen | aus |
+| Rechnungen generieren | nach Absprache |
 
 **Zu beantworten:**
 
-- [ ] Bietet der Bereich *Bestellung* ein Feld für die **externe
-      Bestellnummer**? Davon hängt ab, ob JTL den Doppelimport selbst
-      verhindert oder nur unsere SQLite-Verfolgung.
-- [ ] Welche Felder bietet der Bereich *Bestellung* sonst noch? Die Doku zählt
-      sie nicht auf.
-- [ ] Welche **Versand- und Zahlungsarten** existieren? Die Standardwerte in
-      Schritt 2 müssen bestehende Namen treffen.
-- [ ] Kundennummern von Galaxus und Zur Rose?
-- [ ] Vorlagen-ID notiert?
-
-## Versuch 2: Erster Import im Dialog
-
-Mit der gerade angelegten Vorlage: **Testen/Trockenlauf**, dann *Import
-starten*. Vorher eine Datenbanksicherung.
-
-**Zu beantworten:**
-
-- [ ] Läuft der Trockenlauf fehlerfrei? Sonst Meldung im Wortlaut festhalten
+- [ ] Läuft der Import durch? Sonst Meldung im Wortlaut festhalten
 - [ ] Wird der Auftrag dem festen Kunden zugeordnet, oder entsteht ein neuer?
 - [ ] Landet die Lieferadresse am Auftrag, nicht am Kundenstamm?
-- [ ] Erscheint die Versandkostenposition als `Versandposition`?
-- [ ] Übernimmt JTL unsere `Bestellnummer` (`GAL-9316271`) oder vergibt es eine
-      eigene? Sie geht als `SUPPLIER_ORDER_ID` an Galaxus zurück und wird dort
-      als Code-39-Barcode auf Retourenlabels gedruckt.
-- [ ] Stimmt der MWST-Satz, den JTL aus dem Artikelstamm zieht?
+- [ ] Sind beide Artikel zugeordnet, oder als Freiposition drin?
+- [ ] Stimmen Mengen und Preise?
+- [ ] Welche Auftragsnummer hat JTL vergeben – unsere `GAL-9316271` oder eine eigene?
+- [ ] Ist die Marktplatz-Nummer `9316271` als externe Bestellnummer sichtbar?
+- [ ] Stimmt die MWST?
 
-## Versuch 3: Import über die Kommandozeile
+## Versuch 2: Doppelimport
+
+Dieselbe Datei ein zweites Mal einlesen, einmal mit und einmal ohne die Option
+„Identische externe Identifikationsnummern nicht importieren".
+
+**Zu beantworten:**
+
+- [ ] Verhindert die Option den zweiten Auftrag zuverlässig?
+- [ ] Welche Meldung kommt? Von einem echten Fehler unterscheidbar?
+
+## Versuch 3: Automatischer Weg über tXMLBestellImport
 
 Jetzt automatisiert, mit der gespeicherten Vorlage:
 
