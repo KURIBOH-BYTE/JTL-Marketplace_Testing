@@ -4,11 +4,12 @@
 Nutzt den Code der Middleware, damit hier getestet wird, was später auch
 produktiv läuft – und nicht eine Nachbildung davon.
 
-Erzeugt standardmässig die Ameise-CSV (*Import > Aufträge > Aufträge*).
-Mit `--format xml` stattdessen das OldWawi-XML, das als Alternative erhalten
-bleibt, aber nicht der gewählte Weg ist.
+Erzeugt standardmässig das OldWawi-XML - die Vorgabe der IT. Es laesst sich
+in JTL ueber *Verkauf > Importieren: Auftraege (*.xml)* von Hand einlesen,
+ohne Datenbankzugriff und ohne Vorlage.
 
-Die nötige Zuordnung für die Ameise-Importvorlage zeigt:
+Mit `--format csv` stattdessen die Ameise-CSV. Die noetige Zuordnung fuer
+deren Importvorlage zeigt:
     python tools/jtl_import.py --mapping
 
     python3 tools/build_import.py --platform galaxus \\
@@ -129,8 +130,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--article-name-max", type=int, default=80,
                         help="Artikelname kürzen auf N Zeichen – zum Ausprobieren, "
                              "wo die Grenze von JTL wirklich liegt")
-    parser.add_argument("--format", default="csv", choices=["csv", "xml"],
-                        help="csv = Ameise (Standard), xml = OldWawi")
+    parser.add_argument("--format", default="xml", choices=["xml", "csv"],
+                        help="xml = tXMLBestellImport (Vorgabe der IT, Standard), "
+                             "csv = Ameise")
     parser.add_argument("--batch", action="store_true",
                         help="alle Bestellungen in eine CSV schreiben – so "
                              "braucht Ameise nur einen Aufruf")
