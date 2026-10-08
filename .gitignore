@@ -1,0 +1,18 @@
+# Echte Bestelldaten enthalten Namen und Adressen von Endkunden und gehören
+# nicht ins Repository – auch nicht in ein privates. Nur die Ordnerstruktur
+# wird versioniert, der Inhalt nicht.
+#
+# Reihenfolge ist wichtig: Git steigt nicht in ausgeschlossene Ordner hinab,
+# darum müssen die Unterordner selbst wieder eingeschlossen werden, bevor die
+# .gitkeep-Ausnahme greifen kann.
+samples/**
+!samples/*/
+!samples/**/.gitkeep
+
+config.ini
+
+# macOS
+.DS_Store
+
+__pycache__/
+*.pyc

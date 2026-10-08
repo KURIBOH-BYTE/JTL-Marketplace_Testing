@@ -1,0 +1,115 @@
+# Prüft, dass die Werkzeuge in tools/ lauffähig sind.
+#
+# Bewusst ohne das Middleware-Repository: dieser Lauf soll nicht davon abhängen,
+# ob der Runner ein zweites (womöglich privates) Repository auschecken darf.
+# Geprüft wird deshalb alles, was eigenständig läuft – build_import.py braucht
+# die Middleware und wird nur auf saubere Fehlermeldung geprüft.
+#
+# Ausgeführt wird nichts davon in der Cloud: die echten Versuche laufen auf dem
+# DEV-Server, siehe README.md.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Syntax aller Werkzeuge
+        run: python -m compileall -q tools
+
+      - name: Hilfetexte
+        run: |
+          for tool in tools/*.py; do
+            echo "--- $tool"
+            python "$tool" --help > /dev/null
+          done
+
+      - name: inspect_xml gegen eine Testdatei
+        run: |
+          mkdir -p /tmp/probe
+          cat > /tmp/probe/beispiel.xml <<'XML'
+          <?xml version="1.0" encoding="ISO-8859-1"?>
+          <tBestellungen>
+            <tBestellung kFirma="1">
+              <cBestellNr>TEST-1</cBestellNr>
+              <cExterneBestellNr>9316271</cExterneBestellNr>
+              <twarenkorbpos>
+                <cArtNr>A375-129</cArtNr>
+                <fPreisEinzelNetto>12.59000</fPreisEinzelNetto>
+                <fMwSt>8.10</fMwSt>
+                <cPosTyp>standard</cPosTyp>
+              </twarenkorbpos>
+              <twarenkorbpos>
+                <cArtNr/>
+                <fPreisEinzelNetto>4.58000</fPreisEinzelNetto>
+                <fMwSt>8.10</fMwSt>
+                <cPosTyp>versandkosten</cPosTyp>
+              </twarenkorbpos>
+            </tBestellung>
+          </tBestellungen>
+          XML
+          python tools/inspect_xml.py /tmp/probe/beispiel.xml
+          python tools/inspect_xml.py /tmp/probe/beispiel.xml --merge
+
+      - name: compare_structure erkennt Gleichheit und Unterschiede
+        run: |
+          cp /tmp/probe/beispiel.xml /tmp/probe/kopie.xml
+          python tools/compare_structure.py /tmp/probe/beispiel.xml /tmp/probe/kopie.xml
+          # Fehlendes Feld -> Exitcode 1 erwartet
+          sed '/cExterneBestellNr/d' /tmp/probe/beispiel.xml > /tmp/probe/ohne.xml
+          if python tools/compare_structure.py /tmp/probe/ohne.xml /tmp/probe/beispiel.xml; then
+            echo "FEHLER: Unterschied haette Exitcode 1 liefern muessen"
+            exit 1
+          fi
+
+      - name: inspect_csv gegen eine Testdatei
+        run: |
+          printf 'cArtNr;cName;fPreis\r\nA375-129;"Fingerring, gross";12.59\r\nB475-140;Halskette;49.00\r\n' \
+            > /tmp/probe/export.csv
+          python tools/inspect_csv.py /tmp/probe/export.csv
+
+      - name: build_import meldet fehlende Middleware verständlich
+        run: |
+          # Ohne das Integration-Repository muss eine brauchbare Meldung kommen,
+          # kein Stacktrace.
+          set +e
+          output=$(python tools/build_import.py --platform galaxus /tmp/probe/beispiel.xml 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          if [ "$code" -eq 0 ]; then
+            echo "FEHLER: haette ohne Middleware fehlschlagen muessen"
+            exit 1
+          fi
+          echo "$output" | grep -q "Middleware nicht gefunden" || {
+            echo "FEHLER: Meldung nennt die Ursache nicht"
+            exit 1
+          }
+
+      - name: Keine Zugangsdaten im Repository
+        run: |
+          test ! -f config.ini || { echo "config.ini darf nicht eingecheckt sein"; exit 1; }
+          # samples/ enthält nur die Ordnerstruktur
+          unexpected=$(find samples -type f ! -name '.gitkeep' | head)
+          if [ -n "$unexpected" ]; then
+            echo "Unerwartete Dateien in samples/ (echte Bestelldaten?):"
+            echo "$unexpected"
+            exit 1
+          fi
