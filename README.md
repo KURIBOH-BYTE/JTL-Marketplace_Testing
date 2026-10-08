@@ -56,6 +56,7 @@ JTL-Marketplace_Testing/
 │   ├── import/            was wir an JTL schicken (erzeugt von build_import.py)
 │   └── export/            was JTL ausgibt
 └── tools/
+    ├── hello_jtl.py       erster Kontakt: kommt Python an die Datenbank?
     ├── build_import.py    Import-XML aus einer Marktplatz-Bestellung erzeugen
     ├── jtl_import_db.py   XML in die Tabelle tXMLBestellImport schreiben
     ├── jtl_export.py      Export über die Ameise-Kommandozeile
@@ -111,7 +112,39 @@ muss – Modell und Ablauf der Middleware bleiben gleich.
 
 ---
 
-## Versuch 0: OldWawi.xsd besorgen
+## Versuch 0: Kommt Python überhaupt an JTL?
+
+Der kleinste sinnvolle Test. Liest nur, schreibt nichts.
+
+```bash
+pip install pyodbc
+$PY tools/hello_jtl.py --server "(local)\JTLWAWI" --user sa --password GEHEIM
+```
+
+Oder die Zugangsdaten in `config.ini` eintragen, dann genügt
+`$PY tools/hello_jtl.py`.
+
+Das Skript zeigt der Reihe nach: Verbindung, SQL-Server-Version, Anzahl
+Tabellen, ob die sechs für die Anbindung relevanten Tabellen existieren, die
+Spalten von `tArtikel` und drei echte Artikel.
+
+**Erfolg heisst:** am Ende steht „Der Weg Python -> JTL ist offen."
+
+**Zu beantworten:**
+
+- [ ] Steht die Verbindung? Welcher ODBC-Treiber?
+- [ ] Heisst die Datenbank wirklich `eazybusiness`?
+- [ ] Existiert `tXMLBestellImport`? (Das ist der automatische Importweg.)
+- [ ] Wie heisst die Artikelnummer-Spalte in `tArtikel` – `cArtNr`?
+- [ ] Welche Versand- und Zahlungsarten gibt es? Die Namen braucht der Import:
+      ```sql
+      SELECT cName FROM tVersandArt;
+      SELECT cName FROM tZahlungsart;
+      ```
+
+Erst wenn das läuft, lohnen die weiteren Versuche.
+
+## Versuch 1: OldWawi.xsd besorgen
 
 Die Schemadatei liegt auf jedem JTL-Rechner unter *JTL-Software >
 Importdateien* im Programmordner und in jedem Updatepaket. Sie ist die letzte
@@ -128,7 +161,7 @@ cp "C:\Program Files\JTL-Software\Importdateien\OldWawi.xsd" samples/jtl-vorlage
 - [ ] Welche Feldlängen gelten – besonders `cName` der Position (Versuch 2)?
 - [ ] Ist `ger`/`fra`/`ita`/`eng` die richtige Schreibweise für `cSprache`?
 
-## Versuch 1: Erster Import über den Dialog
+## Versuch 2: Erster Import über den Dialog
 
 Der sichere Weg zuerst: Datei erzeugen, über *Verkauf > Importieren: Aufträge
 (\*.xml)* einlesen, beobachten.
@@ -158,7 +191,7 @@ JTL-Referenz):
 - [ ] Erscheinen die Positionen korrekt, inklusive Versandkostenposition?
 - [ ] Landet die Lieferadresse am Auftrag, nicht am Kundenstamm?
 
-## Versuch 2: Artikelnamen-Länge
+## Versuch 3: Artikelnamen-Länge
 
 Das bekannte Problem der bestehenden CH–DE-Übermittlung. Wir kürzen derzeit auf
 80 Zeichen, die echte Grenze ist unbekannt. Galaxus liefert
@@ -175,7 +208,7 @@ $PY tools/build_import.py --platform galaxus --article-name-max 150 \
 - [ ] Schlägt er fehl oder kürzt JTL selbst stillschweigend?
 - [ ] Danach `jtl.article_name_max_length` in `config.yaml` korrekt setzen
 
-## Versuch 3: Doppelimport-Schutz prüfen
+## Versuch 4: Doppelimport-Schutz prüfen
 
 Laut Doku kann JTL das selbst – über `cExterneBestellNr` und die Import-Option
 „Bestellungen mit identischen externen Identifikationsnummern nicht
@@ -196,7 +229,7 @@ $PY tools/jtl_import_db.py --check-order 9316271
       nicht als Fehler – siehe `JtlImportRejected`.)
 - [ ] Wofür nutzte FOC die zwei zusätzlichen Referenznummern?
 
-## Versuch 4: Weg über die Datenbank
+## Versuch 5: Weg über die Datenbank
 
 Der automatische Importweg. **Erst die Tabellenstruktur ansehen** – der
 Spaltenname `cText` stammt aus Forenbeiträgen, nicht aus der offiziellen Doku.
@@ -224,7 +257,7 @@ $PY tools/jtl_import_db.py --check-order 9316271
 - [ ] Wie lange dauert es bis zur Verarbeitung?
 - [ ] Welcher Datenbankbenutzer darf schreiben?
 
-## Versuch 5: Auftragsnummer zurücklesen
+## Versuch 6: Auftragsnummer zurücklesen
 
 Galaxus will unsere Auftragsnummer in der ORDR (`SUPPLIER_ORDER_ID`) – sie wird
 dort als Code-39-Barcode auf Retourenlabels gedruckt und muss ISO/IEC 16388
@@ -236,7 +269,7 @@ erfüllen. Die Middleware setzt derzeit `GAL-<Bestellnummer>` als `cBestellNr`.
 - [ ] Falls eigene: über `cExterneBestellNr` nachschlagen – welche Abfrage?
 - [ ] Erfüllt das Format die Code-39-Anforderung?
 
-## Versuch 6: Export und Versanddaten
+## Versuch 7: Export und Versanddaten
 
 Das ist die zweite grosse Lücke: niemand bemerkt, dass ein Auftrag versandt
 wurde. Gebraucht werden Lieferscheinnummer, Versanddatum, Tracking-Nummer und
@@ -272,7 +305,7 @@ werden – Galaxus kennt 42, Zur Rose vier (`POST`, `DPD`, `PLANZER`,
 `DHL PARCEL`). Diese Tabelle ist ein Ergebnis dieses Versuchs und gehört
 anschliessend in die Konfiguration, nicht in den Code.
 
-## Versuch 7: Produktexport
+## Versuch 8: Produktexport
 
 Für Phase 1 nicht nötig – Produktdaten laufen über den Webshop. Interessant
 wird es, falls sich das ändert oder zur Kontrolle, welche Artikelnummern und
@@ -290,7 +323,7 @@ $PY tools/inspect_csv.py samples/export/export_articles_*.csv
       Zuordnungstabelle?
 - [ ] Steht der MWST-Satz am Artikel? Das beantwortet Versuch 8
 
-## Versuch 8: MWST-Satz je Artikel
+## Versuch 9: MWST-Satz je Artikel
 
 Zur Rose liefert nur Bruttopreise ohne Steuersatz, `fPreisEinzelNetto` erwartet
 aber netto. Ein pauschaler Satz ist falsch: im Sortiment kommen 8.1 % und

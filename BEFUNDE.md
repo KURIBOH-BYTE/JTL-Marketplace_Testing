@@ -40,6 +40,25 @@ Durch die Doku bereits geklärt, hier nur zur Gegenprüfung am System:
 
 ---
 
+## Versuch 0: Kommt Python an JTL?
+
+**Status:** offen
+
+| Frage | Antwort |
+| --- | --- |
+| Verbindung steht? | |
+| ODBC-Treiber | |
+| Datenbankname | |
+| `tXMLBestellImport` vorhanden? | |
+| Artikelnummer-Spalte in `tArtikel` | |
+| Vorhandene Versandarten (`tVersandArt.cName`) | |
+| Vorhandene Zahlungsarten (`tZahlungsart.cName`) | |
+
+Die letzten zwei Zeilen sind die, die den ersten Import freischalten – ohne
+passende Namen lehnt JTL ihn ab.
+
+---
+
 ## Versuch 1: Struktur von tXMLBestellImport
 
 **Status:** offen – Beispiel-XML fehlt
