@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<tBestellungen>
+	<tBestellung cRechnungsNr="" kFirma="1">
+		<cSprache>ger</cSprache>
+		<cWaehrung>CHF</cWaehrung>
+		<fGesamtsumme>74.18</fGesamtsumme>
+		<cBestellNr>GAL-9316271</cBestellNr>
+		<cExterneBestellNr>9316271</cExterneBestellNr>
+		<cVersandartName>Paket ECO</cVersandartName>
+		<cVersandInfo/>
+		<dVersandDatum/>
+		<cTracking/>
+		<dLieferDatum>2026-10-14</dLieferDatum>
+		<cKommentar>GALAXUS 9316271 | Papier-Lieferschein erforderlich | Endkunden-Bestellnr. 10515922 | Referenz A362799</cKommentar>
+		<cBemerkung/>
+		<cZahlungsartName>Rechnung</cZahlungsartName>
+		<dBezahltDatum>2026-10-07</dBezahltDatum>
+		<twarenkorbpos>
+			<cName>Fingerring, Herr der Ringe</cName>
+			<cArtNr>A375-129</cArtNr>
+			<cBarcode>09783404175109</cBarcode>
+			<cEinheit/>
+			<fPreisEinzelNetto>12.59000</fPreisEinzelNetto>
+			<fPreis>13.61</fPreis>
+			<fMwSt>8.10</fMwSt>
+			<fAnzahl>2.00</fAnzahl>
+			<cPosTyp>standard</cPosTyp>
+			<fRabatt>0.00</fRabatt>
+		</twarenkorbpos>
+		<twarenkorbpos>
+			<cName>Halskette, Silber 925, mit Anhänger</cName>
+			<cArtNr>B475-140</cArtNr>
+			<cBarcode>18683404175109</cBarcode>
+			<cEinheit/>
+			<fPreisEinzelNetto>49.00000</fPreisEinzelNetto>
+			<fPreis>52.97</fPreis>
+			<fMwSt>8.10</fMwSt>
+			<fAnzahl>1.00</fAnzahl>
+			<cPosTyp>standard</cPosTyp>
+			<fRabatt>0.00</fRabatt>
+		</twarenkorbpos>
+		<tkunde>
+			<cKundenNr>47057</cKundenNr>
+			<cAnrede/>
+			<cTitel/>
+			<cVorname/>
+			<cNachname/>
+			<cFirma>Galaxus</cFirma>
+			<cStrasse/>
+			<cAdressZusatz/>
+			<cPLZ/>
+			<cOrt/>
+			<cBundesland/>
+			<cLand/>
+			<cTel/>
+			<cMobil/>
+			<cFax/>
+			<cMail/>
+			<cUSTID/>
+			<cWWW/>
+		</tkunde>
+		<tlieferadresse>
+			<cAnrede>Frau</cAnrede>
+			<cVorname>Ulla</cVorname>
+			<cNachname>Mustermann</cNachname>
+			<cTitel/>
+			<cFirma>Mustermann &amp; Partner GmbH</cFirma>
+			<cStrasse>Musterstrasse 200b</cStrasse>
+			<cAdressZusatz>z. Hd. Ulla Mustermann</cAdressZusatz>
+			<cPLZ>8000</cPLZ>
+			<cOrt>Zürich</cOrt>
+			<cBundesland/>
+			<cLand>Schweiz</cLand>
+			<cTel>0448447700</cTel>
+			<cMobil/>
+			<cFax/>
+			<cMail>noreply@galaxus.ch</cMail>
+		</tlieferadresse>
+		<tzahlungsinfo>
+			<cBankName/>
+			<cBLZ/>
+			<cKontoNr/>
+			<cKartenNr/>
+			<dGueltigkeit/>
+			<cCVV/>
+			<cKartenTyp/>
+			<cInhaber/>
+			<cIBAN/>
+			<cBIC/>
+		</tzahlungsinfo>
+	</tBestellung>
+</tBestellungen>
