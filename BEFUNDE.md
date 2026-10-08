@@ -24,7 +24,11 @@ Durch die Doku bereits geklärt, hier nur zur Gegenprüfung am System:
 | Versandkosten | eigene Position mit `cPosTyp=versandkosten` |
 | Encoding im Doku-Beispiel | `ISO-8859-1` |
 | Datumsformat | `JJJJ-MM-TT` |
-| Automatischer Weg | XML in Tabelle `tXMLBestellImport`, JTL-Worker holt es ab |
+| Automatischer Weg (XML) | Tabelle `tXMLBestellImport`, JTL-Worker holt es ab |
+| **Gewählter Weg** | **Ameise-Importvorlage, CSV** – offiziell unterstützt |
+| Ameise-CSV-Aufbau | eine Zeile je Position, Spaltennamen frei, Zuordnung in der Vorlage |
+| Positionstypen | `Artikel`, `Versandposition` (u. a.) |
+| MWST bei Zur Rose | **erledigt** – Ameise nimmt brutto, Satz kommt aus dem Artikelstamm |
 
 ---
 
@@ -40,52 +44,82 @@ Durch die Doku bereits geklärt, hier nur zur Gegenprüfung am System:
 
 ---
 
-## Versuch 0: Kommt Python an JTL?
+## Versuch 1: Importvorlage anlegen
 
 **Status:** offen
 
 | Frage | Antwort |
 | --- | --- |
-| Verbindung steht? | |
-| Zugriffsweg (pyodbc oder sqlcmd) | |
-| Genügt die Windows-Anmeldung? | |
-| Datenbankname | |
-| `tXMLBestellImport` vorhanden? | |
-| Artikelnummer-Spalte in `tArtikel` | |
-| Vorhandene Versandarten (`tVersandArt.cName`) | |
-| Vorhandene Zahlungsarten (`tZahlungsart.cName`) | |
+| Feld für externe Bestellnummer vorhanden? | |
+| Weitere Felder im Bereich *Bestellung* | |
+| Vorhandene Versandarten | |
+| Vorhandene Zahlungsarten | |
+| Kundennummer Galaxus | |
+| Kundennummer Zur Rose | |
+| Vorlagen-ID (IMP…) | |
 
-Die letzten zwei Zeilen sind die, die den ersten Import freischalten – ohne
-passende Namen lehnt JTL ihn ab.
+Die Versand- und Zahlungsarten plus die Kundennummern sind die Werte, die den
+ersten Import freischalten – ohne sie lehnt JTL ab.
 
 ---
 
-## Versuch 1: Struktur von tXMLBestellImport
+## Versuch 2: Erster Import im Dialog
 
-**Status:** offen – Beispiel-XML fehlt
+**Status:** offen
 
 | Frage | Antwort |
 | --- | --- |
-| Wurzelelement | |
-| Pflichtfelder | |
-| Encoding / Zeilenende | |
-| MWST: Satz oder Betrag? | |
-| Abweichende Lieferadresse | |
-
-**Abweichungen gegenüber unserem Template** (aus `compare_structure.py`):
-
-```
-noch nicht ausgeführt
-```
-
-**Daraus geändert:**
-
-- [ ] `jtl-integration/config/templates/jtl_order_import.xml.j2`
-- [ ] ggf. `jtl-integration/src/jtl_integration/connectors/jtl.py`
+| Trockenlauf fehlerfrei? | |
+| Fehlermeldung im Wortlaut | |
+| Auftrag dem festen Kunden zugeordnet? | |
+| Lieferadresse am Auftrag? | |
+| Versandkostenposition korrekt? | |
+| Eigene Bestellnummer übernommen? | |
+| MWST aus dem Artikelstamm korrekt? | |
 
 ---
 
-## Versuch 2: Artikelnamen-Länge
+## Versuch 3: Import über die Kommandozeile
+
+**Status:** offen
+
+| Frage | Antwort |
+| --- | --- |
+| Verhalten wie im Dialog? | |
+| Logdateien bei Fehlern brauchbar? | |
+| `--mode=test` = Trockenlauf? | |
+| Sammeldatei korrekt getrennt? | |
+
+---
+
+## Versuch 4: Doppelimport
+
+**Status:** offen
+
+| Frage | Antwort |
+| --- | --- |
+| Zwei Aufträge oder Ablehnung? | |
+| Meldung im Wortlaut | |
+| Von echtem Fehler unterscheidbar? | |
+| Hilft die externe Bestellnummer? | |
+
+**Folge:** entscheidet, ob `JtlConnector.order_exists` gebraucht wird.
+
+---
+
+## Versuch 5: Artikelzuordnung
+
+**Status:** offen
+
+| Frage | Antwort |
+| --- | --- |
+| JTL-Artikelnummer = Marktplatz-Artikelnummer? | |
+| EAN als Ausweichweg nutzbar? | |
+| Verhalten bei unbekanntem Artikel | |
+
+---
+
+## Versuch 6: Artikelnamen-Länge
 
 **Status:** offen
 
@@ -95,62 +129,26 @@ noch nicht ausgeführt
 | Fehler oder stilles Kürzen? | |
 | Fehlermeldung im Wortlaut | |
 
-**Daraus geändert:**
-
-- [ ] `jtl.article_name_max_length` in `config.yaml`
-
 ---
 
-## Versuch 3: Doppelte Bestellnummer
+## Versuch 7: Export und Versanddaten
 
-**Status:** offen
+**Status:** offen – die grösste verbleibende Lücke
 
 | Frage | Antwort |
 | --- | --- |
-| Zwei Aufträge oder Ablehnung? | |
-| Fehlermeldung im Wortlaut | |
-| Von echten Fehlern unterscheidbar? | |
-| Feld für die Marktplatz-Bestellnummer | |
-| Wofür nutzte FOC die zwei Zusatzreferenzen? | |
-
-**Folge für die Middleware:** entscheidet, ob `JtlConnector.order_exists`
-gebraucht wird oder ob JTL den Doppelimport selbst abfängt.
-
----
-
-## Versuch 4: Auftragsnummer zurücklesen
-
-**Status:** offen
-
-| Frage | Antwort |
-| --- | --- |
-| Wird die Auftragsnummer zurückgegeben? | |
-| Format | |
-| Code-39-tauglich (ISO/IEC 16388)? | |
-
----
-
-## Versuch 5: Versanddaten herauslesen
-
-**Status:** offen – der zweite kritische Punkt neben Versuch 1
-
-| Frage | Antwort |
-| --- | --- |
-| Verfügbarer Weg (Ameise / Webservice / SQL) | |
+| Vorhandene Exportvorlagen (IDs) | |
+| Vorlage mit Tracking/Versanddatum/Versandart möglich? | |
+| Auf „versandt" filterbar? | |
 | Woran erkennt man „versandt, nicht gemeldet"? | |
-| Feld für Lieferscheinnummer | |
-| Feld für Tracking-Nummer | |
-| Feld für Versanddatum | |
 | Teillieferungen abgebildet als | |
 
 ### Zuordnung Versanddienstleister
 
-Die Werte in JTL müssen auf die erlaubten Werte der Marktplätze abgebildet
-werden. Zur Rose erlaubt nur `POST`, `DPD`, `PLANZER`, `DHL PARCEL`; Galaxus 42
-Werte (vollständige Liste in
-[Galaxus-Referenz](https://github.com/KURIBOH-BYTE/JTL-Marketplace-Integration/blob/main/docs/galaxus-opentrans-reference.md)).
+Zur Rose erlaubt nur `POST`, `DPD`, `PLANZER`, `DHL PARCEL`; Galaxus 42 Werte
+(Liste in der [Galaxus-Referenz](https://github.com/KURIBOH-BYTE/JTL-Marketplace-Integration/blob/main/docs/galaxus-opentrans-reference.md)).
 
-| Wert in JTL | → Galaxus | → Zur Rose |
+| Versandart in JTL | → Galaxus | → Zur Rose |
 | --- | --- | --- |
 | | `swisspost` | `POST` |
 | | | |
@@ -159,14 +157,14 @@ Werte (vollständige Liste in
 
 ---
 
-## Versuch 6: MWST für Zur Rose
+## Versuch 8: Produktexport
 
-**Status:** offen
+**Status:** offen, für Phase 1 nicht nötig
 
 | Frage | Antwort |
 | --- | --- |
-| Satz aus Artikelstamm, wenn weggelassen? | |
-| Sonst: Woher lesen? | |
+| Vorlagen-ID | |
+| Spaltennamen | |
 
 ---
 

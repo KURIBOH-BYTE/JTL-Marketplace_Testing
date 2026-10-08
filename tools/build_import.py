@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
-"""Import-XML für JTL aus einer Marktplatz-Bestellung erzeugen.
+"""Auftrags-CSV für den Import über JTL-Ameise erzeugen.
 
 Nutzt den Code der Middleware, damit hier getestet wird, was später auch
 produktiv läuft – und nicht eine Nachbildung davon.
+
+Erzeugt standardmässig die Ameise-CSV (*Import > Aufträge > Aufträge*).
+Mit `--format xml` stattdessen das OldWawi-XML, das als Alternative erhalten
+bleibt, aber nicht der gewählte Weg ist.
+
+Die nötige Zuordnung für die Ameise-Importvorlage zeigt:
+    python tools/jtl_import.py --mapping
 
     python3 tools/build_import.py --platform galaxus \\
         $MW/tests/fixtures/GORDP_123456_9316271.xml
@@ -122,12 +129,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--article-name-max", type=int, default=80,
                         help="Artikelname kürzen auf N Zeichen – zum Ausprobieren, "
                              "wo die Grenze von JTL wirklich liegt")
+    parser.add_argument("--format", default="csv", choices=["csv", "xml"],
+                        help="csv = Ameise (Standard), xml = OldWawi")
+    parser.add_argument("--batch", action="store_true",
+                        help="alle Bestellungen in eine CSV schreiben – so "
+                             "braucht Ameise nur einen Aufruf")
     parser.add_argument("--vat-percent", default=None,
-                        help="MWST-Satz für Zur Rose (liefert nur Bruttopreise). "
-                             "Notbehelf zum Testen – richtig ist der Satz je "
-                             "Artikel aus dem JTL-Artikelstamm.")
-    parser.add_argument("--encoding", default="ISO-8859-1",
-                        help="Encoding der Import-XML (Standard ISO-8859-1)")
+                        help="MWST-Satz, nur für den XML-Weg. Die Ameise-CSV "
+                             "nimmt Bruttopreise, JTL holt den Satz aus dem "
+                             "Artikelstamm – dort also nicht nötig.")
+    parser.add_argument("--encoding", default=None,
+                        help="Encoding; Standard ISO-8859-1 für XML, "
+                             "utf-8-sig für CSV")
     args = parser.parse_args(argv)
 
     middleware = find_middleware(args.middleware)
@@ -145,12 +158,14 @@ def main(argv: list[str] | None = None) -> int:
         shipping_method="Standard",
         payment_method="Rechnung",
         company_id="1",
-        encoding=args.encoding,
+        import_format=args.format,
+        encoding=args.encoding or "ISO-8859-1",
         vat_percent_fallback=args.vat_percent,
     )
 
     args.out.mkdir(parents=True, exist_ok=True)
     failures = 0
+    collected: list = []
 
     for file_path in args.files:
         if not file_path.exists():
@@ -171,14 +186,33 @@ def main(argv: list[str] | None = None) -> int:
             failures += 1
             continue
 
+        if args.batch:
+            # Alle Aufträge zusammen in eine Datei – Ameise braucht dann nur
+            # einen Aufruf. Geschrieben wird erst nach der Schleife.
+            collected.append(order)
+            continue
+
         try:
             jtl.import_order(order)      # dry_run: schreibt die Datei
         except api["JtlDataIncomplete"] as exc:
             print(f"{file_path.name}: {exc}", file=sys.stderr)
             failures += 1
             continue
-        target = args.out / f"{order.platform.value}_{order.order_id}.xml"
+        target = args.out / f"{order.platform.value}_{order.order_id}.{args.format}"
         print(f"{file_path.name}  ->  {target}")
+
+    if args.batch and collected:
+        if args.format != "csv":
+            print("--batch gibt es nur für csv", file=sys.stderr)
+            return 2
+        from datetime import datetime
+        target = args.out / f"auftraege_{datetime.now():%Y%m%d-%H%M%S}.csv"
+        try:
+            target.write_bytes(jtl.build_import_batch(collected))
+        except api["JtlDataIncomplete"] as exc:
+            print(f"{exc}", file=sys.stderr)
+            return 1
+        print(f"{len(collected)} Bestellung(en)  ->  {target}")
 
     if failures:
         print(f"\n{failures} Datei(en) fehlgeschlagen", file=sys.stderr)
