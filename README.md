@@ -77,6 +77,23 @@ JTL-Marketplace_Testing/
 
 ## Einrichten
 
+**Im Normalfall gar nicht.** Die Bibliotheken liegen als reines Python im
+Integration-Repository unter `jtl-integration/libs/` und werden automatisch
+gefunden. Mit vorhandenem Python genügt:
+
+```powershell
+run.cmd jtl_import --mapping
+run.cmd build_import --platform galaxus ..\JTL-Marketplace-Integration\jtl-integration\tests\fixtures\GORDP_123456_9316271.xml
+```
+
+Kein venv, kein `pip install`, kein IDE.
+
+Zwei Ausnahmen, beide optional: `paramiko` für den SFTP-Austausch mit den
+Marktplätzen und `pyodbc` für `hello_jtl.py`. Beide werden erst beim
+tatsächlichen Verbinden gebraucht.
+
+Wer trotzdem ein venv will (etwa um die Tests laufen zu lassen):
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
