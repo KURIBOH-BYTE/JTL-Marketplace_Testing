@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0"?>
 <tBestellungen>
-	<tBestellung cRechnungsNr="" kFirma="1">
+	<tBestellung cRechnungsNr="" kFirma="1" kBenutzer="1">
 		<cSprache>ger</cSprache>
 		<cWaehrung>CHF</cWaehrung>
-		<fGesamtsumme>74.18</fGesamtsumme>
 		<cBestellNr>GAL-9316271</cBestellNr>
 		<cExterneBestellNr>9316271</cExterneBestellNr>
 		<cVersandartName>Paket ECO</cVersandartName>
@@ -20,24 +19,22 @@
 			<cArtNr>CH107144</cArtNr>
 			<cBarcode></cBarcode>
 			<cEinheit/>
-			<fPreisEinzelNetto>12.59000</fPreisEinzelNetto>
-			<fPreis>13.61</fPreis>
-			<fMwSt>8.10</fMwSt>
-			<fAnzahl>2.00</fAnzahl>
+			<fPreisEinzelNetto>12.59</fPreisEinzelNetto>
+			<fMwSt>8.1</fMwSt>
+			<fAnzahl>2</fAnzahl>
 			<cPosTyp>standard</cPosTyp>
-			<fRabatt>0.00</fRabatt>
+			<fRabatt>0.0</fRabatt>
 		</twarenkorbpos>
 		<twarenkorbpos>
-			<cName>Halskette, Silber 925, mit Anhänger</cName>
+			<cName>Halskette, Silber 925, mit AnhÃ¤nger</cName>
 			<cArtNr>CH107259</cArtNr>
 			<cBarcode></cBarcode>
 			<cEinheit/>
-			<fPreisEinzelNetto>49.00000</fPreisEinzelNetto>
-			<fPreis>52.97</fPreis>
-			<fMwSt>8.10</fMwSt>
-			<fAnzahl>1.00</fAnzahl>
+			<fPreisEinzelNetto>49.0</fPreisEinzelNetto>
+			<fMwSt>8.1</fMwSt>
+			<fAnzahl>1</fAnzahl>
 			<cPosTyp>standard</cPosTyp>
-			<fRabatt>0.00</fRabatt>
+			<fRabatt>0.0</fRabatt>
 		</twarenkorbpos>
 		<tkunde>
 			<cKundenNr>47057</cKundenNr>
@@ -68,7 +65,7 @@
 			<cStrasse>Musterstrasse 200b</cStrasse>
 			<cAdressZusatz>z. Hd. Ulla Mustermann</cAdressZusatz>
 			<cPLZ>8000</cPLZ>
-			<cOrt>Zürich</cOrt>
+			<cOrt>ZÃ¼rich</cOrt>
 			<cBundesland/>
 			<cLand>Schweiz</cLand>
 			<cTel>0448447700</cTel>

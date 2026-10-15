@@ -141,8 +141,8 @@ def main(argv: list[str] | None = None) -> int:
                              "nimmt Bruttopreise, JTL holt den Satz aus dem "
                              "Artikelstamm – dort also nicht nötig.")
     parser.add_argument("--encoding", default=None,
-                        help="Encoding; Standard ISO-8859-1 für XML, "
-                             "utf-8-sig für CSV")
+                        help="Encoding; Standard utf-8 wie in der "
+                             "Referenzdatei der CH-DE-Uebermittlung")
     # Diese drei muessen BESTEHENDEN Eintraegen in JTL entsprechen, sonst
     # lehnt der Import ab. Die Standardwerte sind Platzhalter.
     parser.add_argument("--customer-number", default=None,
@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
         payment_method=args.payment_method,
         company_id=args.company_id or None,
         import_format=args.format,
-        encoding=args.encoding or "ISO-8859-1",
+        encoding=args.encoding or "utf-8",
         vat_percent_fallback=args.vat_percent,
     )
 
